@@ -1,4 +1,5 @@
 plugins {
+	id "se.thinkcode.cucumber-runner" version "0.0.8"
 	id 'org.springframework.boot' version '2.5.4'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
@@ -18,9 +19,35 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.h2database:h2'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.cucumber:cucumber-java:7.0.0'
+	testImplementation 'io.cucumber:cucumber-junit:7.0.0'
+	testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.2'
 }
 
 test {
 	useJUnitPlatform()
+}
+
+configurations {
+	cucumberRuntime {
+		extendsFrom testImplementation
+	}
+}
+
+task cucumberCli() {
+	dependsOn assemble, testClasses
+	doLast {
+		javaexec {
+			main = "io.cucumber.core.cli.Main"
+			classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+			args = [
+					'--plugin', 'pretty',
+					'--plugin', 'html:target/cucumber-report.html',
+					'--glue', 'com.example.entrevueSpringBoot.steps',
+					'src/test/resources']
+		}
+	}
 }
